@@ -1,0 +1,84 @@
+apply plugin: 'eclipse'
+apply plugin: 'application'     // 生成bin lib的distribution :  gradle distTar
+
+def home = System.getenv("HOME")
+
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'           // 发布artifacts
+    apply plugin: 'groovy'
+
+    version = '1.0'
+    group = 'com.epiphyllum'
+    description = 'dropwizard all-in-one template'
+
+    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    jar {
+        manifest {
+            attributes("Implementation-Title": "Gradle")
+        }
+    }
+
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+
+    dependencies {
+        compile(
+                'org.codehaus.groovy:groovy-all:2.4.1',
+                'org.glassfish.jersey.ext:jersey-proxy-client:2.22.1',
+                'com.epiphyllum:h2tool:1.0'
+        )
+
+        testCompile(
+                'junit:junit:4.12',  // junit
+                'org.spockframework:spock-core:1.0-groovy-2.4',  // spock
+                'org.assertj:assertj-core:3.2.0', // assertj
+                'org.hamcrest:hamcrest-core:1.3', // only necessary if Hamcrest matchers are used
+                'io.dropwizard:dropwizard-testing:0.9.1',
+        )
+        testRuntime(
+                'cglib:cglib-nodep:3.2.0',        // allows mocking of classes (in addition to interfaces)
+                'org.objenesis:objenesis:2.2',    // allows mocking of classes without default constructor (together with CGLIB)
+        )
+    }
+}
+
+// 所有子项目
+subprojects {
+
+    // maven plugin
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                repository(url: "file://$home/.m2/repository")
+            }
+        }
+    }
+}
+project(':server') {
+}
+
+project(':client') {
+}
+
+// 默认的restdriver
+mainClassName = 'com.epiphyllum.nio.example'
+applicationDefaultJvmArgs = []
+applicationName = 'nio'
+
+distZip {
+    archiveName = project.name + '.zip'
+}
+
+distTar {
+    archiveName = project.name + '.tar'
+}
+
+
+
